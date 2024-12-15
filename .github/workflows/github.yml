@@ -3,7 +3,7 @@ name: Sync image to GitHub
 on:
   push:
     tags:
-      - '*:*'
+      - '*_*'
 
 jobs:
   sync:
@@ -19,20 +19,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull and tag the Docker image
+      - name: Push Image
         run: |
-          IMAGE_NAME="${GITHUB_REF#refs/tags/}"
-          IFS=':' read -ra IMG <<< "$IMAGE_NAME"
-          IMAGE="${IMG[0]}"
-          TAG="${IMG[1]}"
-          docker pull $IMAGE_NAME
-          docker tag $IMAGE_NAME ghcr.io/${{ github.repository_owner }}/${IMAGE}:${TAG}
-
-      - name: Push the Docker image to GitHub Container Registry
-        run: |
-          IMAGE_NAME="${GITHUB_REF#refs/tags/}"
-          IFS=':' read -ra IMG <<< "$IMAGE_NAME"
-          IMAGE="${IMG[0]}"
-          TAG="${IMG[1]}"
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          IFS='_' read -ra PARTS <<< "$TAG_NAME"
+          IMAGE="${PARTS[0]}"
+          TAG="${PARTS[1]}"
+          docker pull $IMAGE:$TAG
+          docker tag $IMAGE:$TAG ghcr.io/${{ github.repository_owner }}/${IMAGE}:${TAG}
           docker push ghcr.io/${{ github.repository_owner }}/${IMAGE}:${TAG}
-

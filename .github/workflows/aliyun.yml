@@ -3,7 +3,7 @@ name: Sync image to Aliyun
 on:
   push:
     tags:
-      - '*:*'
+      - '*_*'
 
 jobs:
   sync:
@@ -17,18 +17,10 @@ jobs:
 
       - name: Pull and tag the Docker image
         run: |
-          IMAGE_NAME="${GITHUB_REF#refs/tags/}"
-          IFS=':' read -ra IMG <<< "$IMAGE_NAME"
-          IMAGE="${IMG[0]}"
-          TAG="${IMG[1]}"
-          docker pull $IMAGE_NAME
-          docker tag $IMAGE_NAME registry.cn-hangzhou.aliyuncs.com/alanwei/${IMAGE}:${TAG}
-
-      - name: Push the Docker image to GitHub Container Registry
-        run: |
-          IMAGE_NAME="${GITHUB_REF#refs/tags/}"
-          IFS=':' read -ra IMG <<< "$IMAGE_NAME"
-          IMAGE="${IMG[0]}"
-          TAG="${IMG[1]}"
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          IFS='_' read -ra PARTS <<< "$TAG_NAME"
+          IMAGE="${PARTS[0]}"
+          TAG="${PARTS[1]}"
+          docker pull $IMAGE:$TAG
+          docker tag $IMAGE:$TAG registry.cn-hangzhou.aliyuncs.com/alanwei/${IMAGE}:${TAG}
           docker push registry.cn-hangzhou.aliyuncs.com/alanwei/${IMAGE}:${TAG}
-
