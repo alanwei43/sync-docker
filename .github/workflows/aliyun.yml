@@ -1,0 +1,34 @@
+name: Sync image to Aliyun
+
+on:
+  push:
+    tags:
+      - '*:*'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Log into registry
+        run: echo "${{ secrets.ALIYUN_PASSWORD }}" | docker login registry.cn-hangzhou.aliyuncs.com --username ${{ secrets.ALIYUN_EMAIL }} --password-stdin
+
+      - name: Pull and tag the Docker image
+        run: |
+          IMAGE_NAME="${GITHUB_REF#refs/tags/}"
+          IFS=':' read -ra IMG <<< "$IMAGE_NAME"
+          IMAGE="${IMG[0]}"
+          TAG="${IMG[1]}"
+          docker pull $IMAGE_NAME
+          docker tag $IMAGE_NAME registry.cn-hangzhou.aliyuncs.com/alanwei/${IMAGE}:${TAG}
+
+      - name: Push the Docker image to GitHub Container Registry
+        run: |
+          IMAGE_NAME="${GITHUB_REF#refs/tags/}"
+          IFS=':' read -ra IMG <<< "$IMAGE_NAME"
+          IMAGE="${IMG[0]}"
+          TAG="${IMG[1]}"
+          docker push registry.cn-hangzhou.aliyuncs.com/alanwei/${IMAGE}:${TAG}
+
