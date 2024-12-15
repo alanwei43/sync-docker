@@ -22,7 +22,7 @@ jobs:
       - name: Push Image
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
-          IFS='_' read -ra PARTS <<< "$TAG_NAME"
+          IFS='/' read -ra PARTS <<< "$TAG_NAME"
           IMAGE="${PARTS[0]}"
           TAG="${PARTS[1]}"
           docker pull $IMAGE:$TAG
